@@ -32,9 +32,9 @@ export class UsersController {
     return this.service.getOne(id);
   }
 
-  @Get(':telegramId')
-  getOneByTelegramId(@Param() telegramId: number): Promise<GetUserDTO> {
-    return this.service.getOneByTelegramId(telegramId);
+  @Get('getByTelegramId/:id')
+  getOneByTelegramId(@Param() id: number): Promise<GetUserDTO> {
+    return this.service.getOneByTelegramId(id);
   }
 
   @Post()
