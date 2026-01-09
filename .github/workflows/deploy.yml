@@ -1,28 +1,33 @@
-name: Deploy Backend
+name: Deploy to VPS
 
 on:
   push:
     branches:
-      - main
+      - main  # деплой при пуше в main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      # 1. Клонируем репозиторий
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Build and push Docker
-        run: docker build -t open_router_backend:latest .
+      # 2. Настраиваем SSH
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H 91.205.220.47 >> ~/.ssh/known_hosts
 
-      - name: Deploy to VPS
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: deploy_bot_backend
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            cd /home/deploy_bot_backend/open_router_backend
-            docker-compose down
-            docker-compose pull || true
-            docker-compose up -d --build
+      # 3. Подключаемся к VPS и выполняем деплой
+      - name: Deploy via SSH
+        run: |
+          ssh -i ~/.ssh/id_ed25519 deploy-backend@91.205.220.47 << 'EOF'
+            cd /home/deploy-backend/myapp || mkdir -p /home/deploy-backend/myapp && cd /home/deploy-backend/myapp
+            git pull origin main
+            docker compose down
+            docker compose up -d --build
+          EOF
