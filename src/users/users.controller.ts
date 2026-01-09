@@ -32,6 +32,11 @@ export class UsersController {
     return this.service.getOne(id);
   }
 
+  @Get(':telegramId')
+  getOneByTelegramId(@Param() telegramId: number): Promise<GetUserDTO> {
+    return this.service.getOneByTelegramId(telegramId);
+  }
+
   @Post()
   async create(@Body() data: CreateUserDTO): Promise<GetUserDTO> {
     const id = await this.service.create(data);

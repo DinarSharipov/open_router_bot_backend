@@ -43,6 +43,18 @@ export class UsersService {
     return user;
   }
 
+  async getOneByTelegramId(telegramId: number): Promise<GetUserDTO> {
+    const user = await this.prisma.user.findFirst({
+      where: { telegramId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Не найден');
+    }
+
+    return user;
+  }
+
   async create(data: CreateUserDTO): Promise<string> {
     await this.checkTelegramId(data.telegramId);
     const { id } = await this.prisma.user.create({ data });
