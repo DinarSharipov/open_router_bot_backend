@@ -3,18 +3,18 @@ name: Deploy to VPS
 on:
   push:
     branches:
-      - main  # деплой при пуше в main
+      - main  # Деплой при пуше в main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Клонируем репозиторий
+      # 1. Checkout кода
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. Настраиваем SSH
+      # 2. Настройка SSH
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
@@ -22,22 +22,27 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H 91.205.220.47 >> ~/.ssh/known_hosts
 
-      # 3. Подключаемся к VPS и выполняем деплой
+      # 3. Деплой на VPS через SSH с keepalive
       - name: Deploy via SSH
         run: |
-          ssh -i ~/.ssh/id_ed25519 deploy-backend@91.205.220.47 << 'EOF'
-            # создаём директорию, если её нет
+          ssh -i ~/.ssh/id_ed25519 \
+              -o StrictHostKeyChecking=no \
+              -o ServerAliveInterval=30 \
+              -o ServerAliveCountMax=4 \
+              deploy-backend@91.205.220.47 << 'EOF'
+            
+            # Переходим в директорию приложения
             mkdir -p /home/deploy-backend/myapp
             cd /home/deploy-backend/myapp
 
-            # если .git нет, клонируем
+            # Если репозиторий ещё не клонирован
             if [ ! -d ".git" ]; then
               git clone https://github.com/DinarSharipov/open_router_bot_backend.git .
             else
               git pull origin main
             fi
 
-            # запускаем Docker Compose
+            # Деплой через Docker Compose
             docker compose down
             docker compose up -d --build
           EOF
