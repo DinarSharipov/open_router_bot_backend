@@ -6,12 +6,11 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Prisma
-COPY prisma ./prisma
-RUN npx prisma generate
-
-# Исходники
+# Копируем всё (src + prisma)
 COPY . .
+
+# Генерация Prisma клиента уже после копирования
+RUN npx prisma generate
 
 # Сборка NestJS
 RUN npm run build
