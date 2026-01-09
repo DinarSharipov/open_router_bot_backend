@@ -33,7 +33,7 @@ export class UsersController {
   }
 
   @Get('getByTelegramId/:id')
-  getOneByTelegramId(@Param() id: number): Promise<GetUserDTO> {
+  getOneByTelegramId(@Param() { id }: { id: number }): Promise<GetUserDTO> {
     return this.service.getOneByTelegramId(id);
   }
 

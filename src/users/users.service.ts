@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
@@ -44,8 +45,13 @@ export class UsersService {
   }
 
   async getOneByTelegramId(telegramId: number): Promise<GetUserDTO> {
+    if (Number.isNaN(+telegramId)) {
+      throw new InternalServerErrorException(
+        `ID должен быть int : ${telegramId}`,
+      );
+    }
     const user = await this.prisma.user.findFirst({
-      where: { telegramId },
+      where: { telegramId: Number(telegramId) },
     });
 
     if (!user) {
