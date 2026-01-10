@@ -44,9 +44,9 @@ export class UsersService {
   }
 
   /** Поиск по айди */
-  async getOne(telegramId: number): Promise<GetUserDTO> {
+  async getOne(id: string): Promise<GetUserDTO> {
     const user = await this.prisma.user.findUnique({
-      where: { telegramId },
+      where: { id },
       include: {
         favoriteModels: {
           include: {
@@ -115,12 +115,9 @@ export class UsersService {
   }
 
   /** Изменение пользователя */
-  async update(
-    telegramId: number,
-    data: CreateUserDTO,
-  ): Promise<CreateUserDTO> {
+  async update(id: string, data: CreateUserDTO): Promise<CreateUserDTO> {
     const findOne = await this.prisma.user.findFirst({
-      where: { telegramId },
+      where: { id },
     });
     const anyOne = await this.prisma.user.findFirst({
       where: { telegramId: data.telegramId },
@@ -134,7 +131,7 @@ export class UsersService {
       );
     }
     await this.prisma.user.update({
-      where: { telegramId },
+      where: { id },
       data: {
         ...data,
         favoriteModels: data.favoriteModels
