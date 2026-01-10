@@ -26,6 +26,7 @@ export class UsersService {
         name: query.search,
       },
       orderBy: { name: 'asc' },
+      include: { favoriteModels: true },
     });
     return {
       count,
@@ -100,7 +101,14 @@ export class UsersService {
       where: { id },
       data: {
         ...data,
-        favoriteModels: { deleteMany: {}, create: data.favoriteModels },
+        favoriteModels: {
+          deleteMany: {},
+          create: data.favoriteModels?.map((model) => ({
+            modelId: model.modelId,
+            architecture: model.architecture,
+            name: model.name,
+          })),
+        },
       },
     });
     return findOne;
