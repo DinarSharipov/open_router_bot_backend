@@ -33,4 +33,7 @@ export class FavoriteModelDTO {
 
   @IsNotEmpty()
   architecture: string;
+
+  @IsOptional()
+  isFree?: boolean | null;
 }

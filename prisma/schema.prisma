@@ -30,6 +30,7 @@ model FavoriteModelDTO {
   modelId      String
   name         String
   architecture String
+  isFree       Boolean?
   userId       String   @db.Uuid
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 

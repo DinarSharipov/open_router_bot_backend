@@ -107,6 +107,7 @@ export class UsersService {
             modelId: model.modelId,
             architecture: model.architecture,
             name: model.name,
+            isFree: model.isFree,
           })),
         },
       },
