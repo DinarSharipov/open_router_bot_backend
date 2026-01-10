@@ -58,6 +58,7 @@ export class UsersService {
     }
     const user = await this.prisma.user.findFirst({
       where: { telegramId: Number(telegramId) },
+      include: { favoriteModels: true },
     });
 
     if (!user) {
