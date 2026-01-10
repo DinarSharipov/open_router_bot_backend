@@ -26,20 +26,10 @@ export class UsersService {
         name: query.search,
       },
       orderBy: { name: 'asc' },
-      include: {
-        favoriteModels: {
-          include: {
-            model: true,
-          },
-        },
-      },
     });
     return {
       count,
-      data: data.map((user) => ({
-        ...user,
-        favoriteModels: user.favoriteModels.map((m) => m.model),
-      })),
+      data,
     };
   }
 
@@ -48,11 +38,7 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({
       where: { id },
       include: {
-        favoriteModels: {
-          include: {
-            model: true,
-          },
-        },
+        favoriteModels: true,
       },
     });
 
@@ -60,10 +46,7 @@ export class UsersService {
       throw new NotFoundException('Не найден');
     }
 
-    return {
-      ...user,
-      favoriteModels: user.favoriteModels.map((f) => f.model),
-    };
+    return user;
   }
 
   /** Поиск по телеграм айди */
@@ -75,23 +58,13 @@ export class UsersService {
     }
     const user = await this.prisma.user.findFirst({
       where: { telegramId: Number(telegramId) },
-      include: {
-        favoriteModels: {
-          include: {
-            model: true,
-          },
-        },
-      },
     });
 
     if (!user) {
       throw new NotFoundException('Не найден');
     }
 
-    return {
-      ...user,
-      favoriteModels: user.favoriteModels.map((f) => f.model),
-    };
+    return user;
   }
 
   /** Создание пользователя */
@@ -100,15 +73,7 @@ export class UsersService {
     const { id } = await this.prisma.user.create({
       data: {
         ...data,
-        favoriteModels: data.favoriteModels
-          ? {
-              create: data.favoriteModels.map((m) => ({
-                model: {
-                  create: m,
-                },
-              })),
-            }
-          : undefined,
+        favoriteModels: { create: data.favoriteModels },
       },
     });
     return id;
@@ -134,15 +99,7 @@ export class UsersService {
       where: { id },
       data: {
         ...data,
-        favoriteModels: data.favoriteModels
-          ? {
-              create: data.favoriteModels.map((m) => ({
-                model: {
-                  create: m,
-                },
-              })),
-            }
-          : undefined,
+        favoriteModels: { deleteMany: {}, create: data.favoriteModels },
       },
     });
     return findOne;

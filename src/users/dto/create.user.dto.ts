@@ -24,8 +24,9 @@ export class CreateUserDTO {
 }
 
 export class FavoriteModelDTO {
-  @IsNotEmpty()
   id: string;
+  @IsNotEmpty()
+  modelId: string;
 
   @IsNotEmpty()
   name: string;
