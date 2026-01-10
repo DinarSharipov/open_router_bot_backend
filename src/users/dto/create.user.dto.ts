@@ -1,16 +1,35 @@
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsArray, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateUserDTO {
   @IsNotEmpty()
   telegramId: number;
+
   @IsOptional()
-  name: string | null;
+  name?: string | null;
+
   @IsOptional()
-  lastName: string | null;
+  lastName?: string | null;
+
   @IsOptional()
-  wallet: number | null;
+  wallet?: number | null;
+
   @IsOptional()
-  favoriteModels: string[];
+  @IsArray()
+  @Type(() => FavoriteModelDTO)
+  favoriteModels?: FavoriteModelDTO[] = [];
+
   @IsOptional()
-  createdDate: Date | null;
+  createdDate?: Date | null;
+}
+
+export class FavoriteModelDTO {
+  @IsNotEmpty()
+  id: string;
+
+  @IsNotEmpty()
+  name: string;
+
+  @IsNotEmpty()
+  architecture: string;
 }

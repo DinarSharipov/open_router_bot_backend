@@ -14,6 +14,7 @@ import { GetUserDTO } from './dto/get.user.dto.js';
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Получить всех пользователей */
   async getMany(query: GetManyUsersQueryDTO): Promise<GetManyUsersDTO> {
     const count = await this.prisma.user.count({
       where: { name: query.search },
@@ -25,25 +26,47 @@ export class UsersService {
         name: query.search,
       },
       orderBy: { name: 'asc' },
+      include: {
+        favoriteModels: {
+          include: {
+            model: true,
+          },
+        },
+      },
     });
     return {
       count,
-      data,
+      data: data.map((user) => ({
+        ...user,
+        favoriteModels: user.favoriteModels.map((m) => m.model),
+      })),
     };
   }
 
-  async getOne(id: string): Promise<GetUserDTO> {
-    const user = await this.prisma.user.findFirst({
-      where: { id },
+  /** Поиск по айди */
+  async getOne(telegramId: number): Promise<GetUserDTO> {
+    const user = await this.prisma.user.findUnique({
+      where: { telegramId },
+      include: {
+        favoriteModels: {
+          include: {
+            model: true,
+          },
+        },
+      },
     });
 
     if (!user) {
       throw new NotFoundException('Не найден');
     }
 
-    return user;
+    return {
+      ...user,
+      favoriteModels: user.favoriteModels.map((f) => f.model),
+    };
   }
 
+  /** Поиск по телеграм айди */
   async getOneByTelegramId(telegramId: number): Promise<GetUserDTO> {
     if (Number.isNaN(+telegramId)) {
       throw new InternalServerErrorException(
@@ -52,24 +75,52 @@ export class UsersService {
     }
     const user = await this.prisma.user.findFirst({
       where: { telegramId: Number(telegramId) },
+      include: {
+        favoriteModels: {
+          include: {
+            model: true,
+          },
+        },
+      },
     });
 
     if (!user) {
       throw new NotFoundException('Не найден');
     }
 
-    return user;
+    return {
+      ...user,
+      favoriteModels: user.favoriteModels.map((f) => f.model),
+    };
   }
 
+  /** Создание пользователя */
   async create(data: CreateUserDTO): Promise<string> {
     await this.checkTelegramId(data.telegramId);
-    const { id } = await this.prisma.user.create({ data });
+    const { id } = await this.prisma.user.create({
+      data: {
+        ...data,
+        favoriteModels: data.favoriteModels
+          ? {
+              create: data.favoriteModels.map((m) => ({
+                model: {
+                  create: m,
+                },
+              })),
+            }
+          : undefined,
+      },
+    });
     return id;
   }
 
-  async update(id: string, data: CreateUserDTO): Promise<CreateUserDTO> {
+  /** Изменение пользователя */
+  async update(
+    telegramId: number,
+    data: CreateUserDTO,
+  ): Promise<CreateUserDTO> {
     const findOne = await this.prisma.user.findFirst({
-      where: { id },
+      where: { telegramId },
     });
     const anyOne = await this.prisma.user.findFirst({
       where: { telegramId: data.telegramId },
@@ -83,16 +134,29 @@ export class UsersService {
       );
     }
     await this.prisma.user.update({
-      where: { id },
-      data,
+      where: { telegramId },
+      data: {
+        ...data,
+        favoriteModels: data.favoriteModels
+          ? {
+              create: data.favoriteModels.map((m) => ({
+                model: {
+                  create: m,
+                },
+              })),
+            }
+          : undefined,
+      },
     });
     return findOne;
   }
 
+  /** Удаление пользователя */
   async delete(id: string): Promise<void> {
     await this.prisma.user.delete({ where: { id } });
   }
 
+  /** Проверка что такого телеграм айди еще нет */
   private async checkTelegramId(telegramId: number): Promise<void> {
     const existingOne = await this.prisma.user.findFirst({
       where: {
